@@ -8,25 +8,25 @@
 #include <string>
 
 #if !defined(HAVE_UDP_TRANSPORT)
-#error "You must have HAVE_UDP_TRANSPORT defined in order to include this header"
+    #error "You must have HAVE_UDP_TRANSPORT defined in order to include this header"
 #endif
 
 namespace CEC {
 
     namespace Private {
-        struct SocketHolder
+        struct SocketHandle
         {
-            SocketHolder() : s(INVALID_SOCKET) { }
-            explicit SocketHolder(SOCKET s) : s(s) { }
-            SocketHolder(SocketHolder const&) = delete;
-            SocketHolder(SocketHolder&& src)
+            SocketHandle() : s(INVALID_SOCKET) { }
+            explicit SocketHandle(SOCKET s) : s(s) { }
+            SocketHandle(SocketHandle const&) = delete;
+            SocketHandle(SocketHandle&& src)
                 : s(src.s)
             {
                 src.s = INVALID_SOCKET;
             }
 
-            SocketHolder& operator=(SocketHolder const&) = delete;
-            SocketHolder& operator=(SocketHolder&& src)
+            SocketHandle& operator=(SocketHandle const&) = delete;
+            SocketHandle& operator=(SocketHandle&& src)
             {
                 if (this != &src)
                 {
@@ -36,7 +36,7 @@ namespace CEC {
                 return *this;
             }
 
-            ~SocketHolder()
+            ~SocketHandle()
             {
                 reset();
             }
@@ -52,7 +52,7 @@ namespace CEC {
                 return oldsck;
             }
 
-            operator SOCKET() const { return s; }
+            SOCKET get() const { return s; }
             explicit operator bool() const
             {
                 return s != INVALID_SOCKET;
@@ -64,10 +64,13 @@ namespace CEC {
 
         class WinsockHelper
         {
+        public:
             WinsockHelper(WinsockHelper const&) = delete;
-            WinsockHelper& operator=(WinsockHelper const&) = delete;
             WinsockHelper(WinsockHelper&&) = delete;
+
+            WinsockHelper& operator=(WinsockHelper const&) = delete;
             WinsockHelper& operator=(WinsockHelper&&) = delete;
+
 #if defined(WIN32)
             WinsockHelper()
                 : success_(::WSAStartup(MAKEWORD(2, 2), nullptr) == 0)
@@ -86,18 +89,37 @@ namespace CEC {
         };
     }
 
-    class UdpSocket : public P8PLATFORM::ISocket, Private::WinsockHelper
+    using AddressInfo = std::unique_ptr<addrinfo, decltype(&::freeaddrinfo)>;
+    AddressInfo GetAddressInfo(std::string const& host);
+
+    class UdpClientSocket : public P8PLATFORM::ISocket, Private::WinsockHelper
     {
-        struct AddrInfoDeleter
-        {
-            void operator()(addrinfo* p) const { ::freeaddrinfo(p); }
-        };
-        using AddrInfoPtr = std::unique_ptr<addrinfo, AddrInfoDeleter>;
 
     public:
+        UdpClientSocket() = default;
+
         // udp:[a-z0-9.-]+,[0-9]+
-        explicit UdpSocket(char const* strPort);
-        ~UdpSocket();
+        explicit UdpClientSocket(char const* strPort);
+        UdpClientSocket(UdpClientSocket const&) = delete;
+        UdpClientSocket(UdpClientSocket&& src)
+        {
+            *this = std::move(src);
+        }
+
+        ~UdpClientSocket();
+
+        UdpClientSocket& operator=(UdpClientSocket const&) = delete;
+        UdpClientSocket& operator=(UdpClientSocket&& src)
+        {
+            if (this != &src)
+            {
+                name_ = std::move(src.name_);
+                host_ = std::move(src.host_);
+                port_ = src.port_;
+                socket_ = std::move(src.socket_);
+            }
+            return *this;
+        }
 
         bool Open(uint64_t iTimeoutMs = 0) override;
         void Close() override;
@@ -111,24 +133,24 @@ namespace CEC {
 
     private:
 
-        static AddrInfoPtr UdpSocket::MyGetAddrInfo(std::string const& host);
-        Private::SocketHolder makeSocket() const;
-        bool OpenServer();
-        bool OpenClient();
+        Private::SocketHandle makeSocket() const;
+        Private::SocketHandle OpenClient() const;
 
-        std::string const name_;
+        std::string name_;
         std::string host_;
         uint16_t port_;
-        Private::SocketHolder socket_;
-        sockaddr_storage mostRecentPeerAddress_;
-        bool isServer_;
+        Private::SocketHandle socket_;
     };
 
-    class ProtectedUdpSocket : public P8PLATFORM::CProtectedSocket<UdpSocket>
+    class UdpServerSocket
+    {
+
+    };
+    class ProtectedUdpSocket : public P8PLATFORM::CProtectedSocket<UdpClientSocket>
     {
     public:
         explicit ProtectedUdpSocket(char const* strPort)
-            : P8PLATFORM::CProtectedSocket<UdpSocket>(new UdpSocket(strPort))
+            : P8PLATFORM::CProtectedSocket<UdpClientSocket>(new UdpClientSocket(strPort))
         { }
 
         ~ProtectedUdpSocket() override { }

@@ -38,14 +38,39 @@ set(CEC_SOURCES CECClient.cpp
                 LibCECC.cpp)
 
 # /adapter
-set(CEC_SOURCES_ADAPTER adapter/AdapterFactory.cpp)
+set(CEC_SOURCES_ADAPTER adapter/AdapterFactory.cpp
+                        adapter/AdapterFactory.h)
 
 # /adapter/Pulse-Eight
 set(CEC_SOURCES_ADAPTER_P8 adapter/Pulse-Eight/USBCECAdapterMessage.cpp
                            adapter/Pulse-Eight/USBCECAdapterCommands.cpp
                            adapter/Pulse-Eight/USBCECAdapterCommunication.cpp
                            adapter/Pulse-Eight/USBCECAdapterMessageQueue.cpp
-                           adapter/Pulse-Eight/USBCECAdapterDetection.cpp)
+                           adapter/Pulse-Eight/USBCECAdapterDetection.cpp
+                           adapter/Pulse-Eight/USBCECAdapterMessageQueue.h
+                           adapter/Pulse-Eight/USBCECAdapterCommunication.h
+                           adapter/Pulse-Eight/USBCECAdapterCommands.h
+                           adapter/Pulse-Eight/USBCECAdapterDetection.h
+                           adapter/Pulse-Eight/USBCECAdapterMessage.h
+                           )
+
+if (HAVE_RPI_API)
+  set(CEC_SOURCES_ADAPTER_RPI adapter/RPi/RPiCECAdapterCommunication.cpp
+                              adapter/RPi/RPiCECAdapterCommunication.h
+                              adapter/RPi/RPiCECAdapterDetection.cpp
+                              adapter/RPi/RPiCECAdapterDetection.h
+                              adapter/RPi/RPiCECAdapterMessageQueue.cpp
+                              adapter/RPi/RPiCECAdapterMessageQueue.h)
+endif()
+
+if (HAVE_UDP_TRANSPORT)
+    set(CEC_SOURCES_ADAPTER_UDP
+                           adapter/UDP/UDPSocket.cpp
+                           adapter/UDP/UDPSocket.h
+                           adapter/UDP/UdpAdapterCommunication.cpp
+                           adapter/UDP/UdpAdapterCommunication.h
+                           )
+endif()
 
 # /devices
 set(CEC_SOURCES_DEVICES devices/CECAudioSystem.cpp
@@ -90,19 +115,19 @@ set(CEC_HEADERS devices/CECRecordingDevice.h
                 adapter/AOCEC/AOCEC.h
                 adapter/AOCEC/AOCECAdapterDetection.h
                 adapter/AOCEC/AOCECAdapterCommunication.h
-                adapter/Pulse-Eight/USBCECAdapterMessageQueue.h
-                adapter/Pulse-Eight/USBCECAdapterCommunication.h
-                adapter/Pulse-Eight/USBCECAdapterCommands.h
-                adapter/Pulse-Eight/USBCECAdapterDetection.h
-                adapter/Pulse-Eight/USBCECAdapterMessage.h
+                #adapter/Pulse-Eight/USBCECAdapterMessageQueue.h
+                #adapter/Pulse-Eight/USBCECAdapterCommunication.h
+                #adapter/Pulse-Eight/USBCECAdapterCommands.h
+                #adapter/Pulse-Eight/USBCECAdapterDetection.h
+                #adapter/Pulse-Eight/USBCECAdapterMessage.h
                 adapter/TDA995x/TDA995xCECAdapterDetection.h
                 adapter/TDA995x/AdapterMessageQueue.h
                 adapter/TDA995x/TDA995xCECAdapterCommunication.h
-                adapter/AdapterFactory.h
+                #adapter/AdapterFactory.h
                 adapter/AdapterCommunication.h
-                adapter/RPi/RPiCECAdapterMessageQueue.h
-                adapter/RPi/RPiCECAdapterCommunication.h
-                adapter/RPi/RPiCECAdapterDetection.h
+#                adapter/RPi/RPiCECAdapterMessageQueue.h
+#                adapter/RPi/RPiCECAdapterCommunication.h
+#                adapter/RPi/RPiCECAdapterDetection.h
                 CECInputBuffer.h
                 platform/util/baudrate.h
                 platform/util/edid.h
@@ -135,6 +160,8 @@ include(cmake/CheckPlatformSupport.cmake)
 source_group("Source Files" FILES ${CEC_SOURCES})
 source_group("Source Files\\adapter" FILES ${CEC_SOURCES_ADAPTER})
 source_group("Source Files\\adapter\\Pulse-Eight" FILES ${CEC_SOURCES_ADAPTER_P8})
+source_group("Source Files\\adapter\\UDP" FILES ${CEC_SOURCES_ADAPTER_UDP})
+source_group("Source Files\\adapter\\RPi" FILES ${CEC_SOURCES_ADAPTER_RPI})
 source_group("Source Files\\devices" FILES ${CEC_SOURCES_DEVICES})
 source_group("Source Files\\implementations" FILES ${CEC_SOURCES_IMPLEMENTATIONS})
 source_group("Source Files\\platform" FILES ${CEC_SOURCES_PLATFORM})
@@ -143,6 +170,8 @@ list(APPEND CEC_SOURCES ${CEC_HEADERS}
                         ${CEC_EXT_HEADERS}
                         ${CEC_SOURCES_ADAPTER}
                         ${CEC_SOURCES_ADAPTER_P8}
+                        ${CEC_SOURCES_ADAPTER_RPI}
+                        ${CEC_SOURCES_ADAPTER_UDP}
                         ${CEC_SOURCES_DEVICES}
                         ${CEC_SOURCES_IMPLEMENTATIONS}
                         ${CEC_SOURCES_PLATFORM})

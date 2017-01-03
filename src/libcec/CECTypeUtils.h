@@ -37,9 +37,8 @@
 
 namespace CEC
 {
-  class CCECTypeUtils
+  namespace CCECTypeUtils
   {
-  public:
     /*!
      * @brief Get the device type for the given logical address.
      * @param address The address to get the type for.
@@ -70,6 +69,8 @@ namespace CEC
           return CEC_DEVICE_TYPE_RESERVED;
       }
     }
+
+    static uint16_t GetMaskForType(const cec_device_type type);
 
     /*!
      * @brief Get the ackmask for all devices of the same type as the given logical address.

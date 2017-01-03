@@ -37,10 +37,12 @@
 #include <map>
 #include "adapter/AdapterCommunication.h"
 
+#if !defined(RPI_PROXY)
 extern "C" {
 #include <interface/vmcs_host/vc_cecservice.h>
 #include <interface/vchiq_arm/vchiq_if.h>
 }
+#endif
 
 namespace CEC
 {

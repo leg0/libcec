@@ -63,6 +63,10 @@
 #include "AOCEC/AOCECAdapterCommunication.h"
 #endif
 
+#if defined (HAVE_UDP_TRANSPORT)
+#include "UDP/UdpAdapterCommunication.h"
+#endif
+
 using namespace CEC;
 
 int8_t CAdapterFactory::FindAdapters(cec_adapter *deviceList, uint8_t iBufSize, const char *strDevicePath /* = NULL */)
@@ -143,8 +147,11 @@ int8_t CAdapterFactory::DetectAdapters(cec_adapter_descriptor *deviceList, uint8
   }
 #endif
 
+#if defined(HAVE_UDP_TRANSPORT)
+  iAdaptersFound++;
+#endif
 
-#if !defined(HAVE_RPI_API) && !defined(HAVE_P8_USB) && !defined(HAVE_TDA995X_API) && !defined(HAVE_AOCEC_API)
+#if !defined(HAVE_RPI_API) && !defined(HAVE_P8_USB) && !defined(HAVE_TDA995X_API) && !defined(HAVE_AOCEC_API) && !defined(HAVE_UDP_TRANSPORT)
 #error "libCEC doesn't have support for any type of adapter. please check your build system or configuration"
 #endif
 
@@ -171,6 +178,11 @@ IAdapterCommunication *CAdapterFactory::GetInstance(const char *strPort, uint16_
 #if defined(HAVE_RPI_API)
   if (!strcmp(strPort, CEC_RPI_VIRTUAL_COM))
     return new CRPiCECAdapterCommunication(m_lib->m_cec);
+#endif
+
+#if defined(HAVE_UDP_TRANSPORT)
+  if (strncmp("udp:", strPort, 4) == 0)
+      return new CUdpClientAdapterCommunication(m_lib->m_cec, strPort);
 #endif
 
 #if defined(HAVE_P8_USB)
